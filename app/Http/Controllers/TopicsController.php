@@ -9,6 +9,7 @@ use App\Http\Requests\TopicRequest;
 use App\Models\Category;
 use Auth;
 use App\Handlers\ImageUploadHandler;
+use App\Models\User;
 
 class TopicsController extends Controller
 {
@@ -22,6 +23,16 @@ class TopicsController extends Controller
 	// 	$topics = Topic::with('user', 'category')->paginate(50);
 	// 	return view('topics.index', compact('topics'));
 	// }
+
+    public function index(Request $request, Topic $topic, User $user)
+    {
+        $topics = $topic->withOrder($request->order)
+                        ->with('user', 'category')  // 预加载防止 N+1 问题
+                        ->paginate(20);
+        $active_users = $user->getActiveUsers();
+        //dd($active_users);
+        return view('topics.index', compact('topics', 'active_users'));
+    }
 
     public function show(Request $request, Topic $topic)
     {
@@ -70,12 +81,12 @@ class TopicsController extends Controller
 		return redirect()->route('topics.index')->with('success', '成功删除！');
 	}
 
-    public function index(Request $request, Topic $topic)
-    {
-    $topics = $topic->withOrder($request->order)->with('user', 'category')->paginate(20);
+    // public function index(Request $request, Topic $topic)
+    // {
+    // $topics = $topic->withOrder($request->order)->with('user', 'category')->paginate(20);
 
-    return view('topics.index', compact('topics'));
-    }
+    // return view('topics.index', compact('topics'));
+    // }
 
     public function uploadImage(Request $request, ImageUploadHandler $uploader)
     {
